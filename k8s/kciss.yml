@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kciss
+  labels:
+    app: kciss
+#imagePullSecrets:
+#  - name: robotregistrykey
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kciss-rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: kciss
+  namespace: kciss
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kciss
+  labels:
+    app: kciss
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kciss
+  template:
+    metadata:
+      labels:
+        app: kciss
+    spec:
+      serviceAccountName: kciss
+      containers:
+      - name: kciss
+        image: ghcr.io/fabricev/kciss:v0.18.3
+        imagePullPolicy: "Always"
+        ports:
+        - containerPort: 9300
+        command :
+        - kciss
+        - --server
+        - http://trivy-server.trivy-server.svc:8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    app: kciss
+  name: kciss
+spec:
+  type: ClusterIP
+  selector:
+    app: kciss
+  ports:
+  - port: 9300
+    protocol: TCP
+    targetPort: 9300
