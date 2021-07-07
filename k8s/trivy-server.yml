@@ -1,16 +1,21 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: trivy-server
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: trivy-server
+  namespace: trivy-server
   labels:
     app: trivy-server
-#imagePullSecrets:
-#  - name: robotregistrykey
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: trivy-server-deployment
+  namespace: trivy-server
   labels:
     app: trivy-server
 spec:
@@ -39,6 +44,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: trivy-server
   labels:
     app: trivy-server
   name: trivy-server
@@ -50,29 +56,3 @@ spec:
   - port: 8080
     protocol: TCP
     targetPort: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: trivy-server
-  labels:
-    app: trivy-server
-  annotations:
-    ingress.kubernetes.io/force-ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: fabrice-ca-issuer
-spec:
-  rules:
-  - host: trivy.tools.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: trivy-server
-            port: 
-               number: 8080
-  tls:
-  - hosts:
-    - trivy.tools.local
-    secretName: trivy-server-ingress-tls-secret
