@@ -1,0 +1,25 @@
+apiVersion: k3d.io/v1alpha2
+kind: Simple
+name: mycluster
+servers: 1
+agents: 2
+kubeAPI:
+  hostPort: "6443"
+image: rancher/k3s:latest
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+options:
+  k3d:
+    wait: true
+    timeout: "60s"
+    disableLoadbalancer: false
+    disableImageVolume: false
+  k3s:
+    extraServerArgs:
+      - --tls-san=127.0.0.1
+    extraAgentArgs: []
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
